@@ -20,6 +20,16 @@ jobs:
 
     env:
       TRANSLATION_LANGUAGES: "es"
+      PYTHONIOENCODING: utf-8
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
+      AZURE_OPENAI_MODEL_NAME: ${{ secrets.AZURE_OPENAI_MODEL_NAME }}
+      AZURE_OPENAI_CHAT_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT_NAME }}
+      AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+      OPENAI_CHAT_MODEL_ID: ${{ secrets.OPENAI_CHAT_MODEL_ID }}
+      OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
 
     steps:
       - name: Checkout repository
@@ -38,19 +48,14 @@ jobs:
           python -m pip install co-op-translator
 
       - name: Translate Markdown
-        env:
-          PYTHONIOENCODING: utf-8
-          AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
-          AZURE_OPENAI_ENDPOINT: ${{ secrets.AZURE_OPENAI_ENDPOINT }}
-          AZURE_OPENAI_MODEL_NAME: ${{ secrets.AZURE_OPENAI_MODEL_NAME }}
-          AZURE_OPENAI_CHAT_DEPLOYMENT_NAME: ${{ secrets.AZURE_OPENAI_CHAT_DEPLOYMENT_NAME }}
-          AZURE_OPENAI_API_VERSION: ${{ secrets.AZURE_OPENAI_API_VERSION }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
-          OPENAI_CHAT_MODEL_ID: ${{ secrets.OPENAI_CHAT_MODEL_ID }}
-          OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
         run: |
           translate -l "$TRANSLATION_LANGUAGES" -md -y --repo-url "https://github.com/github/copilot-cli-for-beginners.git"
+
+      - name: Normalize and review translations
+        run: |
+          migrate-links -l "$TRANSLATION_LANGUAGES" -y
+          node .github/scripts/fix-translated-markdown.js "$TRANSLATION_LANGUAGES"
+          co-op-review -l "$TRANSLATION_LANGUAGES" --format github
 
       - name: Create pull request
         uses: peter-evans/create-pull-request@v7
