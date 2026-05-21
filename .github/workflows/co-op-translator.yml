@@ -8,6 +8,7 @@ on:
     paths:
       - "**/*.md"
       - "!translations/**"
+      - "!.github/**"
 
 permissions:
   contents: write
