@@ -6,6 +6,32 @@ These instructions guide GitHub Copilot when working in this repository.
 
 This is a **beginner-friendly educational course** teaching GitHub Copilot CLI. The repo contains Markdown chapters (00–07), Python/C#/JavaScript sample apps, and supporting assets (images, demo GIFs, glossary). It is **not** a software product — it is technical courseware.
 
+## Build, Test & Commands
+
+There is no app to "build" — `npm` scripts generate course assets, and the Python sample is tested with pytest.
+
+**Course asset generation** (run from repo root; requires `python3` and `node`):
+
+```bash
+npm install
+npm run release           # full asset pipeline: create tapes → generate VHS demos → verify GIFs
+npm run generate:headers  # regenerate chapter header images only
+npm run generate:demos    # regenerate demo GIFs only
+```
+
+**Sample app tests** (run from `samples/book-app-project/`; Python 3.10+, pytest is the only dependency):
+
+```bash
+cd samples/book-app-project
+pip install -e .          # installs pytest via pyproject.toml dependencies
+pytest                    # run the whole suite
+pytest tests/test_book_app.py                       # run a single file
+pytest tests/test_book_app.py::test_handle_add_success  # run a single test by node id
+pytest -k "remove"        # run tests matching a keyword
+```
+
+There is no configured linter or formatter in this repo — do not introduce one.
+
 ## Writing Conventions
 
 - **Audience**: Beginners with no AI/ML experience. Explain every technical term on first use.
