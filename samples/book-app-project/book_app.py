@@ -1,65 +1,73 @@
 import sys
+
 from books import BookCollection
+from utils import print_books
 
 
-# Global collection instance
-collection = BookCollection()
+def handle_list(collection):
+    """Show every book in the collection."""
+    print_books(collection.list_books())
 
 
-def show_books(books):
-    """Display books in a user-friendly format."""
-    if not books:
-        print("No books found.")
-        return
-
-    print("\nYour Book Collection:\n")
-
-    for index, book in enumerate(books, start=1):
-        status = "✓" if book.read else " "
-        print(f"{index}. [{status}] {book.title} by {book.author} ({book.year})")
-
-    print()
-
-
-def handle_list():
-    books = collection.list_books()
-    show_books(books)
-
-
-def handle_add():
+def handle_add(collection):
+    """Prompt for book details and add the book."""
     print("\nAdd a New Book\n")
 
     title = input("Title: ").strip()
     author = input("Author: ").strip()
+
+    if not title or not author:
+        print("\nError: Title and author are required.\n")
+        return
+
     year_str = input("Year: ").strip()
+    if year_str:
+        try:
+            year = int(year_str)
+        except ValueError:
+            print("\nError: Year must be a whole number.\n")
+            return
+    else:
+        year = 0
 
-    try:
-        year = int(year_str) if year_str else 0
-        collection.add_book(title, author, year)
-        print("\nBook added successfully.\n")
-    except ValueError as e:
-        print(f"\nError: {e}\n")
+    collection.add_book(title, author, year)
+    print("\nBook added successfully.\n")
 
 
-def handle_remove():
+def handle_remove(collection):
+    """Remove a book by title and report whether it was found."""
     print("\nRemove a Book\n")
 
     title = input("Enter the title of the book to remove: ").strip()
-    collection.remove_book(title)
 
-    print("\nBook removed if it existed.\n")
+    if collection.remove_book(title):
+        print(f'\nRemoved "{title}".\n')
+    else:
+        print(f'\nNo book titled "{title}" was found.\n')
 
 
-def handle_find():
+def handle_find(collection):
+    """List all books by a given author."""
     print("\nFind Books by Author\n")
 
     author = input("Author name: ").strip()
-    books = collection.find_by_author(author)
+    print_books(collection.find_by_author(author))
 
-    show_books(books)
+
+def handle_read(collection):
+    """Mark a book as read by title and report whether it was found."""
+    print("\nMark a Book as Read\n")
+
+    title = input("Enter the title of the book to mark as read: ").strip()
+
+    if collection.mark_as_read(title):
+        print(f'\nMarked "{title}" as read.\n')
+    else:
+        print(f'\nNo book titled "{title}" was found.\n')
 
 
 def show_help():
+    """Print the list of available commands."""
     print("""
 Book Collection Helper
 
@@ -68,6 +76,7 @@ Commands:
   add      - Add a new book
   remove   - Remove a book by title
   find     - Find books by author
+  read     - Mark a book as read
   help     - Show this help message
 """)
 
@@ -79,19 +88,29 @@ def main():
 
     command = sys.argv[1].lower()
 
-    if command == "list":
-        handle_list()
-    elif command == "add":
-        handle_add()
-    elif command == "remove":
-        handle_remove()
-    elif command == "find":
-        handle_find()
-    elif command == "help":
+    if command == "help":
         show_help()
-    else:
+        return
+
+    handlers = {
+        "list": handle_list,
+        "add": handle_add,
+        "remove": handle_remove,
+        "find": handle_find,
+        "read": handle_read,
+    }
+
+    handler = handlers.get(command)
+    if handler is None:
         print("Unknown command.\n")
         show_help()
+        return
+
+    collection = BookCollection()
+    try:
+        handler(collection)
+    except (KeyboardInterrupt, EOFError):
+        print("\nCancelled.\n")
 
 
 if __name__ == "__main__":
